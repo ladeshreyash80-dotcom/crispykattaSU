@@ -113,7 +113,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const cartCount = cart.reduce((sum, ci) => sum + ci.quantity, 0)
 
   const placeOrder = async (orderData: Omit<Order, 'id' | 'createdAt' | 'status'>): Promise<Order> => {
-    // Idempotency check - prevent duplicate orders with same attemptId in short time
+    // Idempotency check - prevent duplicate orders with same attemptId
     const existingOrder = orders.find(o => o.attemptId === orderData.attemptId)
     if (existingOrder) {
       return existingOrder
@@ -124,6 +124,43 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       id: `ORD-${Date.now().toString().slice(-6)}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`,
       status: 'received',
       createdAt: new Date().toISOString(),
+    }
+
+    // Try to save to Supabase if configured
+    try {
+      const { isSupabaseConfigured, supabase } = await import('./supabase')
+      if (isSupabaseConfigured()) {
+        const { data: orderRow, error } = await supabase
+          .from('orders')
+          .insert({
+            order_number: order.id,
+            attempt_id: orderData.attemptId,
+            customer_name: orderData.customer.name,
+            customer_phone: orderData.customer.phone,
+            hostel_room: orderData.customer.hostelRoom,
+            order_type: orderData.orderType,
+            subtotal: orderData.subtotal,
+            total: orderData.total,
+            status: 'received',
+            notes: orderData.notes,
+          })
+          .select()
+          .single()
+
+        if (!error && orderRow) {
+          // Insert order items
+          const items = orderData.items.map(item => ({
+            order_id: orderRow.id,
+            menu_item_id: item.menuItem.id,
+            menu_item_name: item.menuItem.name,
+            menu_item_price: item.menuItem.price,
+            quantity: item.quantity,
+          }))
+          await supabase.from('order_items').insert(items)
+        }
+      }
+    } catch (e) {
+      // Continue with localStorage fallback
     }
 
     setOrders((prev) => [order, ...prev])

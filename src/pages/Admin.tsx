@@ -60,7 +60,7 @@ export default function Admin() {
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="bg-[#1a1410] rounded-lg p-6 max-w-md w-full border border-[#2a221b]">
           <h1 className="text-2xl font-bold text-white mb-2">Owner Login</h1>
-          <p className="text-[#a89f91] mb-6">Sign in to access the dashboard</p>
+          <p className="text-[#a89f91] mb-6">Sign in with an authorized owner account</p>
           <form onSubmit={handleSignIn} className="space-y-4">
             <div>
               <label className="block text-[#a89f91] text-sm mb-1">Email</label>
@@ -91,6 +91,28 @@ export default function Admin() {
               Sign In
             </button>
           </form>
+          <p className="text-xs text-[#a89f91] mt-4">
+            Owner access requires an account with role set in app_metadata.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  const isOwner = user.app_metadata?.role === 'owner'
+
+  if (!isOwner) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="bg-[#1a1410] rounded-lg p-6 max-w-md w-full border border-[#2a221b] text-center">
+          <h1 className="text-xl font-bold text-white mb-4">Unauthorized</h1>
+          <p className="text-[#a89f91] mb-6">This account does not have owner privileges.</p>
+          <button
+            onClick={handleSignOut}
+            className="bg-[#2a221b] text-white px-4 py-2 rounded-lg hover:bg-[#3a322b] min-h-[44px]"
+          >
+            Sign Out
+          </button>
         </div>
       </div>
     )
