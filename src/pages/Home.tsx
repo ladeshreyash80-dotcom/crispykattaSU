@@ -25,9 +25,13 @@ export default function Home() {
       <section className="px-4 mb-6">
         <div className="max-w-md mx-auto relative rounded-2xl overflow-hidden border border-[#2a221b] shadow-2xl">
           <img 
-            src="/assets/hero-stall.svg" 
+            src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=1200&h=600&fit=crop" 
             alt="Indian college street food stall with momos, burgers, rolls and chai" 
             className="w-full h-48 sm:h-56 object-cover"
+            onError={(e) => {
+              e.currentTarget.onerror = null
+              e.currentTarget.src = '/assets/hero-stall.svg'
+            }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/30"></div>
           <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-5">
@@ -89,13 +93,29 @@ export default function Home() {
                 <Link
                   key={item.id}
                   to="/menu"
-                  className="block bg-gradient-to-r from-[#15100c] to-[#1a1410] rounded-lg p-4 border border-[#2a221b] hover:border-yellow-400/50 hover:shadow-lg transition-all"
+                  className="block bg-gradient-to-r from-[#15100c] to-[#1a1410] rounded-lg overflow-hidden border border-[#2a221b] hover:border-yellow-400/50 hover:shadow-lg transition-all"
                 >
-                  <div className="flex justify-between items-start mb-1">
-                    <h3 className="text-white font-bold text-base">{item.name}</h3>
-                    <span className="text-yellow-400 font-bold text-base">₹{(item.price / 100).toFixed(0)}</span>
+                  {item.image && (
+                    <div className="w-full h-32 overflow-hidden">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null
+                          e.currentTarget.style.display = 'none'
+                        }}
+                      />
+                    </div>
+                  )}
+                  <div className="p-4">
+                    <div className="flex justify-between items-start mb-1">
+                      <h3 className="text-white font-bold text-base">{item.name}</h3>
+                      <span className="text-yellow-400 font-bold text-base">₹{(item.price / 100).toFixed(0)}</span>
+                    </div>
+                    <p className="text-[#a89f91] text-sm">{item.description}</p>
                   </div>
-                  <p className="text-[#a89f91] text-sm">{item.description}</p>
                 </Link>
               ))}
             </div>

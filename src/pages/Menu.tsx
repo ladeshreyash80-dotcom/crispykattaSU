@@ -55,19 +55,34 @@ export default function Menu() {
             return (
               <div
                 key={item.id}
-                className="bg-[#1a1410] rounded-lg p-4 border border-[#2a221b] flex gap-3"
+                className="bg-[#1a1410] rounded-lg border border-[#2a221b] overflow-hidden flex flex-col sm:flex-row"
               >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between mb-1">
-                    <h3 className="text-white font-semibold">{item.name}</h3>
-                    <span className={`text-xs px-2 py-0.5 rounded ${item.veg ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}`}>
-                      {item.veg ? 'VEG' : 'NON-VEG'}
-                    </span>
+                {item.image && (
+                  <div className="w-full sm:w-32 h-32 sm:h-auto flex-shrink-0 overflow-hidden">
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null
+                        e.currentTarget.style.display = 'none'
+                      }}
+                    />
                   </div>
-                  <p className="text-[#a89f91] text-sm mb-2">{item.description}</p>
-                  <p className="text-[#d97757] font-bold">{formatINR(item.price)}</p>
-                </div>
-                <div className="flex flex-col items-center justify-center">
+                )}
+                <div className="flex-1 min-w-0 p-4 flex gap-3 items-center">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between mb-1">
+                      <h3 className="text-white font-semibold">{item.name}</h3>
+                      <span className={`text-xs px-2 py-0.5 rounded ${item.veg ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}`}>
+                        {item.veg ? 'VEG' : 'NON-VEG'}
+                      </span>
+                    </div>
+                    <p className="text-[#a89f91] text-sm mb-2">{item.description}</p>
+                    <p className="text-[#d97757] font-bold">{formatINR(item.price)}</p>
+                  </div>
+                  <div className="flex flex-col items-center justify-center">
                   {qty === 0 ? (
                     <button
                       onClick={() => addToCart(item)}
@@ -95,6 +110,7 @@ export default function Menu() {
                     </div>
                   )}
                   {!item.available && <span className="text-xs text-red-400 mt-1">Unavailable</span>}
+                  </div>
                 </div>
               </div>
             )
