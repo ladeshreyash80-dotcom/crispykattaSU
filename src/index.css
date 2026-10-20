@@ -3,10 +3,16 @@
 :root {
   --color-primary: #d97757;
   --color-accent: #f59e0b;
-  --color-bg: #0f0b09;
-  --color-surface: #1a1410;
+  --color-yellow: #fbbf24;
+  --color-red: #dc2626;
+  --color-green: #22c55e;
+  --color-bg: #050302;
+  --color-bg-texture: #0a0705;
+  --color-surface: #15100c;
+  --color-surface-2: #1a1410;
   --color-text: #f5f3f0;
   --color-text-muted: #a89f91;
+  --color-border: #2a221b;
 }
 
 * {
@@ -16,7 +22,12 @@
 html, body {
   margin: 0;
   padding: 0;
-  background: var(--color-bg);
+  background-color: var(--color-bg);
+  background-image: 
+    radial-gradient(circle at 20% 50%, rgba(217, 119, 87, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(245, 158, 11, 0.05) 0%, transparent 50%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  background-attachment: fixed;
   color: var(--color-text);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
@@ -27,6 +38,27 @@ html, body {
 
 #root {
   min-height: 100vh;
+}
+
+/* Bold condensed font for headings */
+.font-condensed {
+  font-family: 'Arial Narrow', 'Helvetica Narrow', Arial, 'Helvetica Condensed', sans-serif;
+  font-stretch: condensed;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-33.333%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 20s linear infinite;
 }
 
 /* Mobile-first responsive */

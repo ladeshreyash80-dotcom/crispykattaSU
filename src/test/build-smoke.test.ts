@@ -7,7 +7,7 @@
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { JSDOM } from 'jsdom'
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 
 const DIST = join(process.cwd(), 'dist')
@@ -27,7 +27,9 @@ describe('Production bundle smoke test', () => {
 
   it('the JS bundle references ErrorBoundary and boot-fallback', () => {
     const jsPath = join(DIST, 'assets')
-    const files = readFileSync(join(jsPath, 'index-BRp3Oj7L.js'), 'utf-8')
+    const jsFiles = readdirSync(jsPath).filter((f: string) => f.endsWith('.js'))
+    expect(jsFiles.length).toBeGreaterThan(0)
+    const files = readFileSync(join(jsPath, jsFiles[0]), 'utf-8')
     expect(files).toContain('ErrorBoundary')
     expect(files).toContain('boot-fallback')
   })

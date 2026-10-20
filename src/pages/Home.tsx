@@ -1,77 +1,112 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, Clock, MapPin, Flame, UtensilsCrossed } from 'lucide-react'
 import { storeInfo, menuItems } from '../lib/data'
 
 export default function Home() {
-  const popularItems = menuItems.filter(item => item.popular)
+  const popularItems = menuItems.filter(item => item.popular).slice(0, 4)
 
   return (
-    <div className="min-h-screen">
-      <div className="relative bg-gradient-to-br from-[#1a1410] via-[#0f0b09] to-[#0a0706] px-4 py-10 overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 right-10 w-32 h-32 bg-[#d97757] rounded-full blur-3xl"></div>
-          <div className="absolute bottom-10 left-10 w-40 h-40 bg-[#f59e0b] rounded-full blur-3xl"></div>
-        </div>
-        <div className="max-w-4xl mx-auto relative z-10">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 bg-[#d97757]/10 border border-[#d97757]/30 rounded-full px-4 py-1 mb-4">
-              <Flame size={16} className="text-[#d97757]" />
-              <span className="text-[#d97757] text-sm font-medium">Hot & Fresh</span>
-            </div>
-            <h1 className="text-4xl sm:text-5xl font-bold text-white mb-3 tracking-tight">{storeInfo.name}</h1>
-            <p className="text-xl text-[#a89f91] mb-6">{storeInfo.tagline}</p>
-            <Link
-              to="/menu"
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-[#d97757] to-[#c96649] text-white px-8 py-3 rounded-xl hover:shadow-lg hover:shadow-[#d97757]/30 transition-all min-h-[52px] text-lg font-semibold"
-            >
-              <UtensilsCrossed size={20} />
-              Order Now <ArrowRight size={20} />
-            </Link>
+    <div className="min-h-screen pb-4">
+      {/* Header */}
+      <header className="px-4 pt-6 pb-4">
+        <div className="max-w-md mx-auto">
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="font-condensed text-3xl sm:text-4xl tracking-tight text-white uppercase">
+              {storeInfo.name}
+            </h1>
+            <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-600 text-white text-xs font-bold uppercase">
+              OPEN
+            </span>
           </div>
-          <div className="flex flex-wrap justify-center gap-6 text-sm text-[#a89f91]">
-            <div className="flex items-center gap-2 bg-[#1a1410]/50 backdrop-blur-sm px-4 py-2 rounded-lg border border-[#2a221b]">
-              <Clock size={18} className="text-[#d97757]" />
-              <span>{storeInfo.hours.open} - {storeInfo.hours.close}</span>
-            </div>
-            <div className="flex items-center gap-2 bg-[#1a1410]/50 backdrop-blur-sm px-4 py-2 rounded-lg border border-[#2a221b]">
-              <MapPin size={18} className="text-[#d97757]" />
-              <span>{storeInfo.address}</span>
-            </div>
-          </div>
+          <p className="text-[#a89f91] text-sm">{storeInfo.tagline}</p>
         </div>
-      </div>
-      {popularItems.length > 0 && (
-        <div className="px-4 py-8">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                <Flame size={24} className="text-[#d97757]" />
-                Popular Picks
+      </header>
+
+      {/* Hero Section */}
+      <section className="px-4 mb-6">
+        <div className="max-w-md mx-auto relative rounded-2xl overflow-hidden border border-[#2a221b] shadow-2xl">
+          <img 
+            src="/assets/hero-stall.svg" 
+            alt="Indian college street food stall with momos, burgers, rolls and chai" 
+            className="w-full h-48 sm:h-56 object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/30"></div>
+          <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-5">
+            <div className="mb-3">
+              <h2 className="font-condensed text-4xl sm:text-5xl text-white uppercase leading-none mb-2">
+                HOT FRESH
+                <br />
+                <span className="relative inline-block">
+                  STREET FOOD
+                  <span className="absolute bottom-1 left-0 w-full h-1 bg-yellow-400"></span>
+                </span>
               </h2>
-              <Link to="/menu" className="text-[#d97757] hover:text-[#c96649] flex items-center gap-1 text-sm font-medium">
-                View All <ArrowRight size={16} />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Link
+                to="/menu"
+                className="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white text-center py-3 rounded-lg font-bold text-base uppercase tracking-wide shadow-lg transition-all min-h-[48px] flex items-center justify-center"
+              >
+                ORDER NOW
+              </Link>
+              <Link
+                to="/menu"
+                className="w-full bg-transparent border-2 border-yellow-400 text-yellow-400 hover:bg-yellow-400/10 text-center py-3 rounded-lg font-bold text-base uppercase tracking-wide transition-all min-h-[48px] flex items-center justify-center"
+              >
+                SEE THE MENU
               </Link>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          </div>
+        </div>
+      </section>
+
+      {/* Promotional Ticker */}
+      <section className="mb-6 overflow-hidden">
+        <div className="bg-gradient-to-r from-yellow-500 to-orange-500 py-2">
+          <div className="flex animate-marquee">
+            <div className="flex-shrink-0 flex items-center gap-8 px-4 text-black font-bold text-sm uppercase whitespace-nowrap">
+              <span>🔥 HOT MOMOS • FRESH BURGERS • CRISPY ROLLS • STEAMING CHAI 🔥</span>
+              <span>🔥 HOT MOMOS • FRESH BURGERS • CRISPY ROLLS • STEAMING CHAI 🔥</span>
+              <span>🔥 HOT MOMOS • FRESH BURGERS • CRISPY ROLLS • STEAMING CHAI 🔥</span>
+            </div>
+            <div className="flex-shrink-0 flex items-center gap-8 px-4 text-black font-bold text-sm uppercase whitespace-nowrap">
+              <span>🔥 HOT MOMOS • FRESH BURGERS • CRISPY ROLLS • STEAMING CHAI 🔥</span>
+              <span>🔥 HOT MOMOS • FRESH BURGERS • CRISPY ROLLS • STEAMING CHAI 🔥</span>
+              <span>🔥 HOT MOMOS • FRESH BURGERS • CRISPY ROLLS • STEAMING CHAI 🔥</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Popular Menu */}
+      {popularItems.length > 0 && (
+        <section className="px-4 mb-6">
+          <div className="max-w-md mx-auto">
+            <h2 className="font-condensed text-2xl text-white uppercase mb-4 tracking-wide">
+              POPULAR PICKS
+            </h2>
+            <div className="space-y-3">
               {popularItems.map((item) => (
                 <Link
                   key={item.id}
                   to="/menu"
-                  className="group bg-gradient-to-br from-[#1a1410] to-[#15100c] rounded-xl p-5 border border-[#2a221b] hover:border-[#d97757] hover:shadow-lg hover:shadow-[#d97757]/10 transition-all"
+                  className="block bg-gradient-to-r from-[#15100c] to-[#1a1410] rounded-lg p-4 border border-[#2a221b] hover:border-yellow-400/50 hover:shadow-lg transition-all"
                 >
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-white font-semibold text-lg group-hover:text-[#d97757] transition-colors">{item.name}</h3>
-                    <span className="text-[#d97757] font-bold text-lg">₹{(item.price / 100).toFixed(0)}</span>
+                  <div className="flex justify-between items-start mb-1">
+                    <h3 className="text-white font-bold text-base">{item.name}</h3>
+                    <span className="text-yellow-400 font-bold text-base">₹{(item.price / 100).toFixed(0)}</span>
                   </div>
-                  <p className="text-[#a89f91] text-sm leading-relaxed">{item.description}</p>
-                  <div className="mt-3 text-xs text-[#d97757] opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                    Add to cart <ArrowRight size={12} />
-                  </div>
+                  <p className="text-[#a89f91] text-sm">{item.description}</p>
                 </Link>
               ))}
             </div>
+            <Link
+              to="/menu"
+              className="block mt-4 text-center text-yellow-400 hover:text-yellow-300 font-bold uppercase text-sm tracking-wide"
+            >
+              VIEW FULL MENU →
+            </Link>
           </div>
-        </div>
+        </section>
       )}
     </div>
   )
