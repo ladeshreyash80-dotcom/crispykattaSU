@@ -1,0 +1,16 @@
+{
+  "name": "Crispy Katta",
+  "short_name": "Crispy Katta",
+  "description": "College Gate Ka Street Food",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0b09",
+  "theme_color": "#14100D",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
