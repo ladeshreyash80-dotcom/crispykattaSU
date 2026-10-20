@@ -57,10 +57,11 @@ export default function Checkout() {
       })
 
       navigate(`/confirmation/${order.id}`)
-    } catch (err: any) {
-      if (err.errors) {
+    } catch (err: unknown) {
+      const zodErr = err as { errors?: Array<{ path: (string | number)[]; message: string }> }
+      if (zodErr.errors) {
         const newErrors: Record<string, string> = {}
-        err.errors.forEach((error: any) => {
+        zodErr.errors.forEach((error) => {
           if (error.path[0]) {
             newErrors[error.path[0]] = error.message
           }

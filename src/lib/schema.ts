@@ -4,7 +4,7 @@ export const checkoutSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   phone: z.string().min(10, 'Enter a valid phone number').optional(),
   hostelRoom: z.string().min(1, 'Hostel/Room or pickup location required'),
-  orderType: z.enum(['pickup', 'delivery'], { required_error: 'Select order type' }),
+  orderType: z.enum(['pickup', 'delivery'], { message: 'Select order type' }),
   notes: z.string().optional(),
 })
 
