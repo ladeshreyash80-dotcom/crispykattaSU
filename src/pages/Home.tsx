@@ -81,53 +81,51 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Popular Menu */}
-      {popularItems.length > 0 && (
-        <section className="px-4 mb-6">
-          <div className="max-w-md mx-auto">
-            <h2 className="font-condensed text-2xl text-white uppercase mb-4 tracking-wide">
-              POPULAR PICKS
-            </h2>
-            <div className="space-y-3">
-              {popularItems.map((item) => (
-                <Link
-                  key={item.id}
-                  to="/menu"
-                  className="block bg-gradient-to-r from-[#15100c] to-[#1a1410] rounded-lg overflow-hidden border border-[#2a221b] hover:border-yellow-400/50 hover:shadow-lg transition-all"
-                >
-                  {item.image && (
-                    <div className="w-full h-32 overflow-hidden">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                        onError={(e) => {
-                          e.currentTarget.onerror = null
-                          e.currentTarget.style.display = 'none'
-                        }}
-                      />
-                    </div>
-                  )}
-                  <div className="p-4">
-                    <div className="flex justify-between items-start mb-1">
-                      <h3 className="text-white font-bold text-base">{item.name}</h3>
-                      <span className="text-yellow-400 font-bold text-base">₹{(item.price / 100).toFixed(0)}</span>
-                    </div>
-                    <p className="text-[#a89f91] text-sm">{item.description}</p>
+      {/* Menu Preview */}
+      <section className="px-4 mb-6">
+        <div className="max-w-md mx-auto">
+          <h2 className="font-condensed text-2xl text-white uppercase mb-4 tracking-wide">
+            {popularItems.length > 0 ? 'POPULAR PICKS' : 'OUR MENU'}
+          </h2>
+          <div className="space-y-3">
+            {(popularItems.length > 0 ? popularItems : menuItems.slice(0, 4)).map((item) => (
+              <Link
+                key={item.id}
+                to="/menu"
+                className="block bg-gradient-to-r from-[#15100c] to-[#1a1410] rounded-lg overflow-hidden border border-[#2a221b] hover:border-yellow-400/50 hover:shadow-lg transition-all"
+              >
+                {item.image && (
+                  <div className="w-full h-32 overflow-hidden">
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null
+                        e.currentTarget.style.display = 'none'
+                      }}
+                    />
                   </div>
-                </Link>
-              ))}
-            </div>
-            <Link
-              to="/menu"
-              className="block mt-4 text-center text-yellow-400 hover:text-yellow-300 font-bold uppercase text-sm tracking-wide"
-            >
-              VIEW FULL MENU →
-            </Link>
+                )}
+                <div className="p-4">
+                  <div className="flex justify-between items-start mb-1">
+                    <h3 className="text-white font-bold text-base">{item.name}</h3>
+                    <span className="text-yellow-400 font-bold text-base">{item.price > 0 ? `₹${(item.price / 100).toFixed(0)}` : 'Price TBA'}</span>
+                  </div>
+                  <p className="text-[#a89f91] text-sm">{item.description}</p>
+                </div>
+              </Link>
+            ))}
           </div>
-        </section>
-      )}
+          <Link
+            to="/menu"
+            className="block mt-4 text-center text-yellow-400 hover:text-yellow-300 font-bold uppercase text-sm tracking-wide"
+          >
+            VIEW FULL MENU →
+          </Link>
+        </div>
+      </section>
     </div>
   )
 }
