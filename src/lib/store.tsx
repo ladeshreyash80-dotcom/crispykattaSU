@@ -159,7 +159,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           await supabase.from('order_items').insert(items)
         }
       }
-    } catch (e) {
+    } catch {
       // Continue with localStorage fallback
     }
 
