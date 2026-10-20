@@ -30,6 +30,11 @@ export default function Checkout() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setErrors({})
+    const hasUnconfirmed = cart.some(ci => ci.menuItem.price <= 0)
+    if (hasUnconfirmed) {
+      setErrors({ general: 'Some items have unconfirmed prices. Please contact the store or wait for pricing to be updated.' })
+      return
+    }
 
     try {
       const validated = checkoutSchema.parse(formData)

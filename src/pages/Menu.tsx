@@ -86,8 +86,9 @@ export default function Menu() {
                   {qty === 0 ? (
                     <button
                       onClick={() => addToCart(item)}
-                      disabled={!item.available}
+                      disabled={!item.available || item.price <= 0}
                       className="bg-[#d97757] text-white px-4 py-2 rounded-lg hover:bg-[#c96649] disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] min-w-[44px]"
+                      title={item.price <= 0 ? 'Price pending confirmation' : ''}
                     >
                       <Plus size={18} />
                     </button>
