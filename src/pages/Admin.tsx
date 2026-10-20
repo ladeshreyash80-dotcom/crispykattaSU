@@ -1,73 +1,58 @@
 import { useState, useEffect } from 'react'
-import { LogIn, LogOut } from 'lucide-react'
+import { LogIn } from 'lucide-react'
 import { getSupabaseClient, isSupabaseConfigured } from '../lib/supabase'
 import type { User } from '@supabase/supabase-js'
 
 export default function Admin() {
-  const [authState, setAuthState] = useState<{ user: User | null; loaded: boolean } | null>({ user: null, loaded: false })
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
 
   const configured = isSupabaseConfigured()
 
   useEffect(() => {
+    if (!configured) {
+      setLoading(false)
+      return
+    }
     try {
       const client = getSupabaseClient()
       if (!client) {
-        setAuthState({ user: null, loaded: true })
+        setLoading(false)
         return
       }
-      let active = true
       client.auth.getSession().then(({ data: { session } }) => {
-        if (!active) return
-        setAuthState({ user: session?.user ?? null, loaded: true })
+        setUser(session?.user ?? null)
+        setLoading(false)
       }).catch(() => {
-        if (!active) return
-        setAuthState({ user: null, loaded: true })
+        setLoading(false)
       })
-      const { data: { subscription } } = client.auth.onAuthStateChange((_event, session) => {
-        if (!active) return
-        setAuthState({ user: session?.user ?? null, loaded: true })
-      })
-      return () => { active = false; subscription.unsubscribe() }
-    } catch (err) {
-      console.error('Admin init error:', err)
-      setAuthState({ user: null, loaded: true })
+    } catch {
+      setLoading(false)
     }
   }, [])
-
-  const user = authState?.user ?? null
-  const loading = configured && !authState?.loaded
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     try {
       const client = getSupabaseClient()
-      if (!client) { setError('Supabase not configured on this deployment.'); return }
+      if (!client) { setError('Not configured'); return }
       const { error: signInError } = await client.auth.signInWithPassword({ email, password })
       if (signInError) setError(signInError.message)
     } catch (err: any) {
-      setError(err?.message || 'Sign in failed')
-    }
-  }
-
-  const handleSignOut = async () => {
-    try {
-      const client = getSupabaseClient()
-      if (client) await client.auth.signOut()
-    } catch (err) {
-      console.error(err)
+      setError(err?.message || 'Failed')
     }
   }
 
   if (!configured) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 bg-[#0f0b09]">
-        <div className="bg-[#1a1410] rounded-lg p-6 max-w-md w-full border border-[#2a221b]">
-          <h1 className="text-xl font-bold text-white mb-2">Owner Dashboard</h1>
-          <p className="text-[#a89f91]">Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.</p>
+      <div style={{minHeight:'100vh',background:'#0f0b09',display:'flex',alignItems:'center',justifyContent:'center',padding:'20px'}}>
+        <div style={{background:'#1a1410',padding:'24px',borderRadius:'8px',maxWidth:'400px',width:'100%',border:'1px solid #2a221b'}}>
+          <h1 style={{color:'white',fontSize:'20px',marginBottom:'8px'}}>Owner Dashboard</h1>
+          <p style={{color:'#a89f91'}}>Supabase not configured</p>
         </div>
       </div>
     )
@@ -75,29 +60,22 @@ export default function Admin() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0f0b09] text-[#a89f91]">
-        Loading dashboard...
+      <div style={{minHeight:'100vh',background:'#0f0b09',display:'flex',alignItems:'center',justifyContent:'center',color:'#a89f91'}}>
+        Loading...
       </div>
     )
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 bg-[#0f0b09]">
-        <div className="bg-[#1a1410] rounded-lg p-6 max-w-md w-full border border-[#2a221b]">
-          <h1 className="text-2xl font-bold text-white mb-2">Owner Login</h1>
-          <p className="text-[#a89f91] mb-6">Sign in to access the dashboard</p>
-          <form onSubmit={handleSignIn} className="space-y-4">
-            <div>
-              <label className="block text-[#a89f91] text-sm mb-1">Email</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-[#2a221b] text-white px-3 py-2 rounded border border-[#3a322b]" required />
-            </div>
-            <div>
-              <label className="block text-[#a89f91] text-sm mb-1">Password</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-[#2a221b] text-white px-3 py-2 rounded border border-[#3a322b]" required />
-            </div>
-            {error && <p className="text-red-400 text-sm">{error}</p>}
-            <button type="submit" className="w-full bg-[#d97757] text-white py-2 rounded flex items-center justify-center gap-2">
+      <div style={{minHeight:'100vh',background:'#0f0b09',display:'flex',alignItems:'center',justifyContent:'center',padding:'20px'}}>
+        <div style={{background:'#1a1410',padding:'24px',borderRadius:'8px',maxWidth:'400px',width:'100%',border:'1px solid #2a221b'}}>
+          <h1 style={{color:'white',fontSize:'24px',marginBottom:'8px'}}>Owner Login</h1>
+          <form onSubmit={handleSignIn} style={{display:'flex',flexDirection:'column',gap:'12px'}}>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" style={{padding:'8px',background:'#2a221b',color:'white',border:'1px solid #3a322b',borderRadius:'4px'}} required />
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" style={{padding:'8px',background:'#2a221b',color:'white',border:'1px solid #3a322b',borderRadius:'4px'}} required />
+            {error && <p style={{color:'#f87171',fontSize:'14px'}}>{error}</p>}
+            <button type="submit" style={{padding:'8px',background:'#d97757',color:'white',border:'none',borderRadius:'4px',display:'flex',alignItems:'center',justifyContent:'center',gap:'8px'}}>
               <LogIn size={18} /> Sign In
             </button>
           </form>
@@ -107,20 +85,10 @@ export default function Admin() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0b09]">
-      <div className="bg-[#1a1410] px-4 py-4 border-b border-[#2a221b] flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Owner Dashboard</h1>
-          <p className="text-[#a89f91] text-sm">{user.email}</p>
-        </div>
-        <button onClick={handleSignOut} className="flex items-center gap-2 text-[#a89f91] hover:text-white">
-          <LogOut size={18} /> Sign Out
-        </button>
-      </div>
-      <div className="px-4 py-6 max-w-4xl mx-auto">
-        <div className="bg-[#1a1410] rounded-lg p-6 border border-[#2a221b]">
-          <p className="text-white">Dashboard is ready. Menu and settings can be managed via the existing backend.</p>
-        </div>
+    <div style={{minHeight:'100vh',background:'#0f0b09',padding:'20px'}}>
+      <div style={{background:'#1a1410',padding:'16px',borderRadius:'8px',border:'1px solid #2a221b'}}>
+        <h1 style={{color:'white',fontSize:'24px',marginBottom:'8px'}}>Owner Dashboard</h1>
+        <p style={{color:'#a89f91'}}>{user.email}</p>
       </div>
     </div>
   )
