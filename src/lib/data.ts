@@ -1,5 +1,13 @@
 export interface MenuItem {
+  /** Stable client-side identifier (also used as the React key). */
   id: string
+  /**
+   * Primary key of the matching row in the Supabase `menu_items` table.
+   * Kept in sync with `supabase/migrations/20240101000004_seed_menu.sql`.
+   * Orders reference this value so the `order_items.menu_item_id` foreign key
+   * resolves instead of failing on a non-UUID slug.
+   */
+  dbId?: string
   name: string
   description: string
   price: number // in paise
@@ -12,22 +20,25 @@ export interface MenuItem {
 
 export interface Category {
   id: string
+  /** Primary key of the matching row in the Supabase `categories` table. */
+  dbId?: string
   name: string
   icon?: string
 }
 
 export const categories: Category[] = [
-  { id: 'momos', name: 'Momos' },
-  { id: 'burgers', name: 'Burgers' },
-  { id: 'pizza', name: 'Pizza' },
-  { id: 'rolls', name: 'Rolls' },
-  { id: 'shakes', name: 'Shakes' },
-  { id: 'snacks', name: 'Snacks' },
+  { id: 'momos', dbId: '22222222-2222-4222-8222-000000000001', name: 'Momos' },
+  { id: 'burgers', dbId: '22222222-2222-4222-8222-000000000002', name: 'Burgers' },
+  { id: 'pizza', dbId: '22222222-2222-4222-8222-000000000003', name: 'Pizza' },
+  { id: 'rolls', dbId: '22222222-2222-4222-8222-000000000004', name: 'Rolls' },
+  { id: 'shakes', dbId: '22222222-2222-4222-8222-000000000005', name: 'Shakes' },
+  { id: 'snacks', dbId: '22222222-2222-4222-8222-000000000006', name: 'Snacks' },
 ]
 
 export const menuItems: MenuItem[] = [
   {
     id: 'momo-steam-6',
+    dbId: '11111111-1111-4111-8111-000000000001',
     name: 'Steamed Momos (6pcs)',
     description: 'Classic veg momos served with spicy chutney',
     price: 6000, // ₹60
@@ -38,6 +49,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'momo-fry-6',
+    dbId: '11111111-1111-4111-8111-000000000002',
     name: 'Fried Momos (6pcs)',
     description: 'Crispy fried momos with spicy dip',
     price: 7000,
@@ -48,6 +60,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'burger-classic',
+    dbId: '11111111-1111-4111-8111-000000000003',
     name: 'Classic Veg Burger',
     description: 'Crispy patty with lettuce, tomato, cheese',
     price: 8000,
@@ -58,6 +71,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'pizza-margherita',
+    dbId: '11111111-1111-4111-8111-000000000004',
     name: 'Margherita Pizza (Regular)',
     description: 'Cheesy pizza with fresh basil',
     price: 14900,
@@ -67,6 +81,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'roll-paneer',
+    dbId: '11111111-1111-4111-8111-000000000005',
     name: 'Paneer Roll',
     description: 'Grilled paneer wrapped in paratha',
     price: 9000,
@@ -76,6 +91,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'shake-chocolate',
+    dbId: '11111111-1111-4111-8111-000000000006',
     name: 'Chocolate Shake',
     description: 'Thick chocolate milkshake',
     price: 7000,

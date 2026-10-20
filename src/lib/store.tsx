@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { MenuItem } from './data'
 
 export interface CartItem {
@@ -46,39 +46,82 @@ const StoreContext = createContext<StoreContextType | undefined>(undefined)
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>(() => {
-    const saved = localStorage.getItem('crispy-katta-cart')
-    return saved ? JSON.parse(saved) : []
+    try {
+      const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('crispy-katta-cart') : null
+      return saved ? JSON.parse(saved) : []
+    } catch {
+      return []
+    }
   })
 
   const [orders, setOrders] = useState<Order[]>(() => {
-    const saved = localStorage.getItem('crispy-katta-orders')
-    return saved ? JSON.parse(saved) : []
+    try {
+      const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('crispy-katta-orders') : null
+      return saved ? JSON.parse(saved) : []
+    } catch {
+      return []
+    }
   })
+  const ordersRef = useRef<Order[]>(orders)
+  useEffect(() => {
+    ordersRef.current = orders
+  }, [orders])
 
   const [profile, setProfile] = useState<{ name: string; phone?: string } | null>(() => {
-    const saved = localStorage.getItem('crispy-katta-profile')
-    return saved ? JSON.parse(saved) : null
+    try {
+      const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('crispy-katta-profile') : null
+      return saved ? JSON.parse(saved) : null
+    } catch {
+      return null
+    }
   })
 
   const [points, setPoints] = useState<number>(() => {
-    const saved = localStorage.getItem('crispy-katta-points')
-    return saved ? parseInt(saved) : 0
+    try {
+      const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('crispy-katta-points') : null
+      return saved ? parseInt(saved) : 0
+    } catch {
+      return 0
+    }
   })
+  const attemptIdToOrderRef = useRef<Map<string, Order>>(new Map())
 
   useEffect(() => {
-    localStorage.setItem('crispy-katta-cart', JSON.stringify(cart))
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('crispy-katta-cart', JSON.stringify(cart))
+      }
+    } catch {}
   }, [cart])
 
   useEffect(() => {
-    localStorage.setItem('crispy-katta-orders', JSON.stringify(orders))
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('crispy-katta-orders', JSON.stringify(orders))
+      }
+    } catch {}
+    // Sync to attempt map
+    for (const o of orders) {
+      if (o.attemptId && !attemptIdToOrderRef.current.has(o.attemptId)) {
+        attemptIdToOrderRef.current.set(o.attemptId, o)
+      }
+    }
   }, [orders])
 
   useEffect(() => {
-    localStorage.setItem('crispy-katta-profile', JSON.stringify(profile))
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('crispy-katta-profile', JSON.stringify(profile))
+      }
+    } catch {}
   }, [profile])
 
   useEffect(() => {
-    localStorage.setItem('crispy-katta-points', points.toString())
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('crispy-katta-points', points.toString())
+      }
+    } catch {}
   }, [points])
 
   const addToCart = (item: MenuItem, quantity = 1) => {
@@ -114,8 +157,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const placeOrder = async (orderData: Omit<Order, 'id' | 'createdAt' | 'status'>): Promise<Order> => {
     // Idempotency check - prevent duplicate orders with same attemptId
-    const existingOrder = orders.find(o => o.attemptId === orderData.attemptId)
+    const existingOrder =
+      (orderData.attemptId ? attemptIdToOrderRef.current.get(orderData.attemptId) : undefined) ||
+      ordersRef.current.find(o => o.attemptId === orderData.attemptId) ||
+      orders.find(o => o.attemptId === orderData.attemptId)
     if (existingOrder) {
+      if (orderData.attemptId) {
+        attemptIdToOrderRef.current.set(orderData.attemptId, existingOrder)
+      }
       return existingOrder
     }
 
@@ -126,11 +175,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       createdAt: new Date().toISOString(),
     }
 
-    // Try to save to Supabase if configured
+    // Persist to Supabase when the backend is configured. Falls back to the
+    // device-local record so the customer flow never hard-fails.
     try {
-      const { isSupabaseConfigured, supabase } = await import('./supabase')
-      if (isSupabaseConfigured()) {
-        const { data: orderRow, error } = await supabase
+      const { getSupabaseClient } = await import('./supabase')
+      const client = getSupabaseClient()
+      if (client) {
+        const { data: orderRow, error } = await client
           .from('orders')
           .insert({
             order_number: order.id,
@@ -148,22 +199,32 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           .single()
 
         if (!error && orderRow) {
-          // Insert order items
-          const items = orderData.items.map(item => ({
-            order_id: orderRow.id,
-            menu_item_id: item.menuItem.id,
-            menu_item_name: item.menuItem.name,
-            menu_item_price: item.menuItem.price,
-            quantity: item.quantity,
-          }))
-          await supabase.from('order_items').insert(items)
+          const items = orderData.items
+            .filter((item) => item.menuItem.dbId)
+            .map((item) => ({
+              order_id: orderRow.id,
+              menu_item_id: item.menuItem.dbId,
+              menu_item_name: item.menuItem.name,
+              menu_item_price: item.menuItem.price,
+              quantity: item.quantity,
+            }))
+          if (items.length > 0) {
+            await client.from('order_items').insert(items)
+          }
         }
       }
     } catch {
       // Continue with localStorage fallback
     }
 
-    setOrders((prev) => [order, ...prev])
+    if (order.attemptId) {
+      attemptIdToOrderRef.current.set(order.attemptId, order)
+    }
+    setOrders((prev) => {
+      const next = [order, ...prev]
+      ordersRef.current = next
+      return next
+    })
     clearCart()
     return order
   }

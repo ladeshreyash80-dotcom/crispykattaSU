@@ -58,6 +58,7 @@ export default function Checkout() {
 
       navigate(`/confirmation/${order.id}`)
     } catch (err: unknown) {
+      console.error('Checkout submission failed:', err)
       const zodErr = err as { errors?: Array<{ path: (string | number)[]; message: string }> }
       if (zodErr.errors) {
         const newErrors: Record<string, string> = {}
