@@ -41,9 +41,9 @@ export const categories: Category[] = [
 
 export const menuItems: MenuItem[] = [
   // Snacks
-  { id: 'kadhi-samosa', name: 'Kadhi Samosa', description: 'Crispy samosas in kadhi', price: 0, category: 'snacks', veg: true, available: true },
+  { id: 'kadhi-samosa', name: 'Kadhi Samosa', description: 'Crispy samosas in kadhi', price: 0, category: 'snacks', veg: true, available: true, popular: true },
   { id: 'samosa', name: 'Samosa', description: 'Crispy potato samosa', price: 0, category: 'snacks', veg: true, available: true },
-  { id: 'fries', name: 'Fries', description: 'Crispy golden fries', price: 2000, category: 'snacks', veg: true, available: true },
+  { id: 'fries', name: 'Fries', description: 'Crispy golden fries', price: 2000, category: 'snacks', veg: true, available: true, popular: true },
   { id: 'samosa-pav', name: 'Samosa + Pav', description: 'Samosa served with pav', price: 0, category: 'snacks', veg: true, available: true },
   { id: 'kadhi-bhel', name: 'Kadhi Bhel', description: 'Tangy kadhi bhel', price: 0, category: 'snacks', veg: true, available: true },
   { id: 'crispy-vada', name: 'Crispy Vada', description: 'Crispy vada', price: 2500, category: 'snacks', veg: true, available: true },
@@ -62,7 +62,7 @@ export const menuItems: MenuItem[] = [
   { id: 'peri-peri-fries', name: 'Peri Peri Fries', description: 'Spicy peri peri fries', price: 2500, category: 'fries', veg: true, available: true },
   { id: 'cheese-fries', name: 'Cheese Fries', description: 'Fries with cheese', price: 4000, category: 'fries', veg: true, available: true },
   // Rolls & Wraps
-  { id: 'veg-roll', name: 'Veg Roll', description: 'Vegetable roll', price: 4000, category: 'rolls', veg: true, available: true },
+  { id: 'veg-roll', name: 'Veg Roll', description: 'Vegetable roll', price: 4000, category: 'rolls', veg: true, available: true, popular: true },
   { id: 'aloo-roll', name: 'Aloo Roll', description: 'Aloo roll', price: 4000, category: 'rolls', veg: true, available: true },
   { id: 'paneer-roll', name: 'Paneer Roll', description: 'Paneer roll', price: 5000, category: 'rolls', veg: true, available: true },
   { id: 'paneer-cheese-roll', name: 'Paneer Cheese Roll', description: 'Paneer cheese roll', price: 7000, category: 'rolls', veg: true, available: true },
