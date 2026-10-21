@@ -1,5 +1,5 @@
--- Add role support
-ALTER TABLE auth.users ADD COLUMN IF NOT EXISTS app_metadata JSONB DEFAULT '{}'::jsonb;
+-- Note: app_metadata column already exists on auth.users in Supabase.
+-- Do NOT alter Supabase-managed auth schema.
 
 -- Create function to check if user is owner
 CREATE OR REPLACE FUNCTION is_owner()
