@@ -117,7 +117,12 @@ export default function Admin() {
       const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`
       const bucket = type === 'stall' ? 'stall-photos' : 'menu-images'
       const { error: uploadError } = await client.storage.from(bucket).upload(fileName, file)
-      if (uploadError) throw uploadError
+      if (uploadError) {
+        if (uploadError.message?.includes('Bucket not found')) {
+          throw new Error(`Storage bucket "${bucket}" not found. Create it in Supabase Storage with public access enabled.`)
+        }
+        throw uploadError
+      }
       const { data: { publicUrl } } = client.storage.from(bucket).getPublicUrl(fileName)
       if (type === 'stall') {
         setStallPhotoUrl(publicUrl)
@@ -227,6 +232,7 @@ export default function Admin() {
         {activeTab === 'images' && (
           <div style={{background:'#1a1410',padding:'20px',borderRadius:'8px',border:'1px solid #2a221b'}}>
             <h2 style={{color:'white',marginBottom:'16px'}}>Stall Photo</h2>
+            <p style={{color:'#a89f91',marginBottom:'12px',fontSize:'14px'}}>Storage buckets required: 'stall-photos' and 'menu-images' (public). Create them in Supabase Storage if missing.</p>
             {stallPhotoUrl && <img src={stallPhotoUrl} alt="Stall" style={{width:'100%',maxHeight:'300px',objectFit:'cover',borderRadius:'8px',marginBottom:'16px'}} />}
             <label style={{background:'#d97757',color:'white',padding:'10px 20px',borderRadius:'4px',cursor:'pointer',display:'inline-flex',alignItems:'center',gap:'8px'}}>
               <Upload size={18}/> {uploading ? 'Uploading...' : 'Upload/Replace Photo'}
