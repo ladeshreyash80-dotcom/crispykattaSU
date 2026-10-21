@@ -175,46 +175,44 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       createdAt: new Date().toISOString(),
     }
 
-    // Persist to Supabase when the backend is configured. Falls back to the
-    // device-local record so the customer flow never hard-fails.
+    // Persist to Supabase when the backend is configured. Uses atomic RPC
+    // to create order + items in a single transaction with server-side price validation.
     try {
       const { getSupabaseClient } = await import('./supabase')
       const client = getSupabaseClient()
       if (client) {
-        const { data: orderRow, error } = await client
-          .from('orders')
-          .insert({
-            order_number: order.id,
-            attempt_id: orderData.attemptId,
-            customer_name: orderData.customer.name,
-            customer_phone: orderData.customer.phone,
-            hostel_room: orderData.customer.hostelRoom,
-            order_type: orderData.orderType,
-            subtotal: orderData.subtotal,
-            total: orderData.total,
-            status: 'received',
-            notes: orderData.notes,
+        const items = orderData.items
+          .filter((item) => item.menuItem.dbId)
+          .map((item) => ({
+            menu_item_id: item.menuItem.dbId,
+            quantity: item.quantity,
+          }))
+        if (items.length > 0) {
+          const { data, error } = await client.rpc('create_order_atomic', {
+            p_order_number: order.id,
+            p_attempt_id: orderData.attemptId || null,
+            p_customer_name: orderData.customer.name,
+            p_customer_phone: orderData.customer.phone || null,
+            p_hostel_room: orderData.customer.hostelRoom,
+            p_order_type: orderData.orderType,
+            p_notes: orderData.notes || null,
+            p_items: items,
           })
-          .select()
-          .single()
-
-        if (!error && orderRow) {
-          const items = orderData.items
-            .filter((item) => item.menuItem.dbId)
-            .map((item) => ({
-              order_id: orderRow.id,
-              menu_item_id: item.menuItem.dbId,
-              menu_item_name: item.menuItem.name,
-              menu_item_price: item.menuItem.price,
-              quantity: item.quantity,
-            }))
-          if (items.length > 0) {
-            await client.from('order_items').insert(items)
+          if (error) {
+            console.error('Order creation failed:', error)
+            throw error
+          }
+          // Update order with server-calculated total
+          if (data && data[0]) {
+            order.total = data[0].total
+            order.subtotal = data[0].total
           }
         }
       }
-    } catch {
-      // Continue with localStorage fallback
+    } catch (err) {
+      console.error('Supabase order persistence failed:', err)
+      // Do not silently continue - throw so caller knows
+      throw err
     }
 
     if (order.attemptId) {
