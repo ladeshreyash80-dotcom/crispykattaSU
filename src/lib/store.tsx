@@ -180,33 +180,34 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     try {
       const { getSupabaseClient } = await import('./supabase')
       const client = getSupabaseClient()
-      if (client) {
-        const items = orderData.items
-          .filter((item) => item.menuItem.dbId)
-          .map((item) => ({
-            menu_item_id: item.menuItem.dbId,
-            quantity: item.quantity,
-          }))
-        if (items.length > 0) {
-          const { data, error } = await client.rpc('create_order_atomic', {
-            p_order_number: order.id,
-            p_attempt_id: orderData.attemptId || null,
-            p_customer_name: orderData.customer.name,
-            p_customer_phone: orderData.customer.phone || null,
-            p_hostel_room: orderData.customer.hostelRoom,
-            p_order_type: orderData.orderType,
-            p_notes: orderData.notes || null,
-            p_items: items,
-          })
-          if (error) {
-            console.error('Order creation failed:', error)
-            throw error
-          }
-          // Update order with server-calculated total
-          if (data && data[0]) {
-            order.total = data[0].total
-            order.subtotal = data[0].total
-          }
+      if (!client) {
+        throw new Error('Database not configured. Orders cannot be placed without a configured backend.')
+      }
+      const items = orderData.items
+        .filter((item) => item.menuItem.dbId)
+        .map((item) => ({
+          menu_item_id: item.menuItem.dbId,
+          quantity: item.quantity,
+        }))
+      if (items.length > 0) {
+        const { data, error } = await client.rpc('create_order_atomic', {
+          p_order_number: order.id,
+          p_attempt_id: orderData.attemptId || null,
+          p_customer_name: orderData.customer.name,
+          p_customer_phone: orderData.customer.phone || null,
+          p_hostel_room: orderData.customer.hostelRoom,
+          p_order_type: orderData.orderType,
+          p_notes: orderData.notes || null,
+          p_items: items,
+        })
+        if (error) {
+          console.error('Order creation failed:', error)
+          throw error
+        }
+        // Update order with server-calculated total
+        if (data && data[0]) {
+          order.total = data[0].total
+          order.subtotal = data[0].total
         }
       }
     } catch (err) {
