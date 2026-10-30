@@ -62,6 +62,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS validate_order_before_insert ON orders;
 CREATE TRIGGER validate_order_before_insert
   BEFORE INSERT ON orders
   FOR EACH ROW

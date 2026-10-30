@@ -27,6 +27,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
+DROP TRIGGER IF EXISTS validate_order_item_before_insert ON order_items;
 CREATE TRIGGER validate_order_item_before_insert
   BEFORE INSERT ON order_items
   FOR EACH ROW
