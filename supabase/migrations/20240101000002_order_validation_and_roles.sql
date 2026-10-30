@@ -17,38 +17,38 @@ DROP POLICY IF EXISTS "Authenticated users can view all orders" ON orders;
 DROP POLICY IF EXISTS "Authenticated users can update orders" ON orders;
 DROP POLICY IF EXISTS "Authenticated users can delete orders" ON orders;
 
-CREATE POLICY "Only owners can view all orders" ON orders FOR SELECT USING (is_owner());
-CREATE POLICY "Only owners can update orders" ON orders FOR UPDATE USING (is_owner());
-CREATE POLICY "Only owners can delete orders" ON orders FOR DELETE USING (is_owner());
+CREATE POLICY "Only owners can view all orders" ON orders FOR SELECT TO authenticated USING (is_owner());
+CREATE POLICY "Only owners can update orders" ON orders FOR UPDATE TO authenticated USING (is_owner());
+CREATE POLICY "Only owners can delete orders" ON orders FOR DELETE TO authenticated USING (is_owner());
 
 -- Same for order_items
 DROP POLICY IF EXISTS "Authenticated users can view all order items" ON order_items;
 DROP POLICY IF EXISTS "Authenticated users can update order items" ON order_items;
 DROP POLICY IF EXISTS "Authenticated users can delete order items" ON order_items;
 
-CREATE POLICY "Only owners can view all order items" ON order_items FOR SELECT USING (is_owner());
-CREATE POLICY "Only owners can update order items" ON order_items FOR UPDATE USING (is_owner());
-CREATE POLICY "Only owners can delete order items" ON order_items FOR DELETE USING (is_owner());
+CREATE POLICY "Only owners can view all order items" ON order_items FOR SELECT TO authenticated USING (is_owner());
+CREATE POLICY "Only owners can update order items" ON order_items FOR UPDATE TO authenticated USING (is_owner());
+CREATE POLICY "Only owners can delete order items" ON order_items FOR DELETE TO authenticated USING (is_owner());
 
 -- Menu items - only owners can modify
 DROP POLICY IF EXISTS "Authenticated users can insert menu items" ON menu_items;
 DROP POLICY IF EXISTS "Authenticated users can update menu items" ON menu_items;
 DROP POLICY IF EXISTS "Authenticated users can delete menu items" ON menu_items;
 
-CREATE POLICY "Only owners can insert menu items" ON menu_items FOR INSERT WITH CHECK (is_owner());
-CREATE POLICY "Only owners can update menu items" ON menu_items FOR UPDATE USING (is_owner());
-CREATE POLICY "Only owners can delete menu items" ON menu_items FOR DELETE USING (is_owner());
+CREATE POLICY "Only owners can insert menu items" ON menu_items FOR INSERT TO authenticated WITH CHECK (is_owner());
+CREATE POLICY "Only owners can update menu items" ON menu_items FOR UPDATE TO authenticated USING (is_owner());
+CREATE POLICY "Only owners can delete menu items" ON menu_items FOR DELETE TO authenticated USING (is_owner());
 
 -- Store settings
 DROP POLICY IF EXISTS "Authenticated users can manage store settings" ON store_settings;
-CREATE POLICY "Only owners can manage store settings" ON store_settings FOR ALL USING (is_owner());
+CREATE POLICY "Only owners can manage store settings" ON store_settings FOR ALL TO authenticated USING (is_owner());
 
 -- Loyalty points - only owners can manage
 DROP POLICY IF EXISTS "Authenticated users can manage loyalty points" ON loyalty_points;
-CREATE POLICY "Only owners can manage loyalty points" ON loyalty_points FOR ALL USING (is_owner());
+CREATE POLICY "Only owners can manage loyalty points" ON loyalty_points FOR ALL TO authenticated USING (is_owner());
 
 DROP POLICY IF EXISTS "Authenticated users can manage point transactions" ON point_transactions;
-CREATE POLICY "Only owners can manage point transactions" ON point_transactions FOR ALL USING (is_owner());
+CREATE POLICY "Only owners can manage point transactions" ON point_transactions FOR ALL TO authenticated USING (is_owner());
 
 -- Order validation function
 CREATE OR REPLACE FUNCTION validate_order_submission()
