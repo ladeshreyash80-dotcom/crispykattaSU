@@ -10,7 +10,7 @@ BEGIN
     (auth.jwt() -> 'app_metadata' ->> 'role') = 'owner'
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Update RLS policies to be more restrictive
 DROP POLICY IF EXISTS "Authenticated users can view all orders" ON orders;

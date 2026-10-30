@@ -13,12 +13,12 @@ ON CONFLICT (id) DO UPDATE
   SET name = EXCLUDED.name, slug = EXCLUDED.slug, sort_order = EXCLUDED.sort_order;
 
 INSERT INTO menu_items (id, name, description, price, category_id, veg, available, popular, sort_order) VALUES
-  ('11111111-1111-4111-8111-000000000001', 'Steamed Momos (6pcs)',      'Classic veg momos served with spicy chutney',  6000,  '22222222-2222-4222-8222-000000000001', true,  true,  true,  1),
-  ('11111111-1111-4111-8111-000000000002', 'Fried Momos (6pcs)',        'Crispy fried momos with spicy dip',             7000,  '22222222-2222-4222-8222-000000000001', true,  true,  true,  2),
-  ('11111111-1111-4111-8111-000000000003', 'Classic Veg Burger',        'Crispy patty with lettuce, tomato, cheese',     8000,  '22222222-2222-4222-8222-000000000002', true,  true,  true,  3),
-  ('11111111-1111-4111-8111-000000000004', 'Margherita Pizza (Regular)','Cheesy pizza with fresh basil',                14900, '22222222-2222-4222-8222-000000000003', true,  true,  false, 4),
-  ('11111111-1111-4111-8111-000000000005', 'Paneer Roll',               'Grilled paneer wrapped in paratha',             9000,  '22222222-2222-4222-8222-000000000004', true,  true,  false, 5),
-  ('11111111-1111-4111-8111-000000000006', 'Chocolate Shake',           'Thick chocolate milkshake',                     7000,  '22222222-2222-4222-8222-000000000005', true,  true,  false, 6)
+  ('11111111-1111-4111-8111-000000000001', 'Steamed Momos (6pcs)',      'Classic veg momos served with spicy chutney',  6000,  '22222222-2222-4222-8222-000000000006', true,  true,  true,  1),
+  ('11111111-1111-4111-8111-000000000002', 'Fried Momos (6pcs)',        'Crispy fried momos with spicy dip',             7000,  '22222222-2222-4222-8222-000000000006', true,  true,  true,  2),
+  ('11111111-1111-4111-8111-000000000003', 'Classic Veg Burger',        'Crispy patty with lettuce, tomato, cheese',     8000,  '22222222-2222-4222-8222-000000000003', true,  true,  true,  3),
+  ('11111111-1111-4111-8111-000000000004', 'Margherita Pizza (Regular)','Cheesy pizza with fresh basil',                14900, '22222222-2222-4222-8222-000000000008', true,  true,  false, 4),
+  ('11111111-1111-4111-8111-000000000005', 'Paneer Roll',               'Grilled paneer wrapped in paratha',             9000,  '22222222-2222-4222-8222-000000000005', true,  true,  false, 5),
+  ('11111111-1111-4111-8111-000000000006', 'Chocolate Shake',           'Thick chocolate milkshake',                     7000,  '22222222-2222-4222-8222-000000000009', true,  true,  false, 6)
 ON CONFLICT (id) DO UPDATE
   SET name        = EXCLUDED.name,
       description = EXCLUDED.description,

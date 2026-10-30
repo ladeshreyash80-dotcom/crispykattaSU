@@ -8,7 +8,7 @@ DECLARE
 BEGIN
   -- Fetch the menu item
   SELECT id, price, available INTO menu_item
-  FROM menu_items
+  FROM public.menu_items
   WHERE id = NEW.menu_item_id;
   
   -- Validate item exists and is available
@@ -25,7 +25,7 @@ BEGIN
   
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE TRIGGER validate_order_item_before_insert
   BEFORE INSERT ON order_items
