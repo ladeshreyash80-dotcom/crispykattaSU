@@ -1,5 +1,6 @@
 -- Crispy Katta Database Schema (Recovery version)
 -- Handles partial state where categories table already exists
+-- All statements are idempotent and safe to re-run
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
