@@ -21,9 +21,10 @@ CREATE POLICY "Authenticated users can update menu items" ON menu_items FOR UPDA
 DROP POLICY IF EXISTS "Authenticated users can delete menu items" ON menu_items;
 CREATE POLICY "Authenticated users can delete menu items" ON menu_items FOR DELETE USING (auth.role() = 'authenticated');
 
--- Orders: anyone can create orders (customers without accounts), authenticated can read/update all
+-- Orders: NO direct INSERT policy - order creation must go through create_order_atomic() RPC
+-- This prevents customers from bypassing server-side price validation and atomic order creation
+-- The create_order_atomic() function is SECURITY DEFINER and bypasses RLS
 DROP POLICY IF EXISTS "Anyone can create orders" ON orders;
-CREATE POLICY "Anyone can create orders" ON orders FOR INSERT WITH CHECK (true);
 DROP POLICY IF EXISTS "Authenticated users can view all orders" ON orders;
 CREATE POLICY "Authenticated users can view all orders" ON orders FOR SELECT USING (auth.role() = 'authenticated');
 DROP POLICY IF EXISTS "Authenticated users can update orders" ON orders;
@@ -31,9 +32,9 @@ CREATE POLICY "Authenticated users can update orders" ON orders FOR UPDATE USING
 DROP POLICY IF EXISTS "Authenticated users can delete orders" ON orders;
 CREATE POLICY "Authenticated users can delete orders" ON orders FOR DELETE USING (auth.role() = 'authenticated');
 
--- Order items: anyone can create when placing order, authenticated can read
+-- Order items: NO direct INSERT policy - items are created via create_order_atomic() RPC
+-- This prevents customers from inserting order items with fake prices or names
 DROP POLICY IF EXISTS "Anyone can create order items" ON order_items;
-CREATE POLICY "Anyone can create order items" ON order_items FOR INSERT WITH CHECK (true);
 DROP POLICY IF EXISTS "Authenticated users can view all order items" ON order_items;
 CREATE POLICY "Authenticated users can view all order items" ON order_items FOR SELECT USING (auth.role() = 'authenticated');
 DROP POLICY IF EXISTS "Authenticated users can update order items" ON order_items;
