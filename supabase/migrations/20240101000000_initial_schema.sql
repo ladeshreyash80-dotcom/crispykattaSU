@@ -122,5 +122,5 @@ CREATE TRIGGER update_loyalty_points_updated_at BEFORE UPDATE ON public.loyalty_
 DROP TRIGGER IF EXISTS update_store_settings_updated_at ON public.store_settings;
 CREATE TRIGGER update_store_settings_updated_at BEFORE UPDATE ON public.store_settings FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
--- Clean up diagnostic table
-DROP TABLE IF EXISTS public._diagnostic_test;
+-- Note: Diagnostic tables (if any exist) should be cleaned up manually
+-- after verifying they contain no production data.
