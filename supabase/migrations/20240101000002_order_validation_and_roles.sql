@@ -60,7 +60,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = '';
 
 DROP TRIGGER IF EXISTS validate_order_before_insert ON orders;
 CREATE TRIGGER validate_order_before_insert
