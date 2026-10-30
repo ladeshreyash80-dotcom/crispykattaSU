@@ -5,7 +5,6 @@ CREATE OR REPLACE FUNCTION is_owner()
 RETURNS BOOLEAN AS $$
 BEGIN
   RETURN (
-    auth.role() = 'authenticated' AND 
     (auth.jwt() -> 'app_metadata' ->> 'role') = 'owner'
   );
 END;
@@ -40,6 +39,11 @@ BEGIN
 
   IF NOT v_available THEN
     RAISE EXCEPTION 'Menu item not available: %', v_name;
+  END IF;
+
+  -- Validate quantity is positive (additional to CHECK constraint)
+  IF NEW.quantity <= 0 THEN
+    RAISE EXCEPTION 'Quantity must be greater than zero';
   END IF;
 
   -- Override client-submitted price with canonical DB price

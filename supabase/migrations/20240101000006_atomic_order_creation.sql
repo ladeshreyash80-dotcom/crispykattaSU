@@ -25,14 +25,14 @@ BEGIN
   -- Check for duplicate attempt_id
   IF p_attempt_id IS NOT NULL THEN
     SELECT id INTO v_existing_order
-    FROM orders
+    FROM public.orders
     WHERE attempt_id = p_attempt_id;
     
     IF v_existing_order IS NOT NULL THEN
       -- Return existing order
       SELECT o.id, o.order_number, o.total INTO v_order_id, p_order_number, v_subtotal
-      FROM orders o
-      WHERE o.id = v_existing_order;
+      FROM public.orders o
+    WHERE o.id = v_existing_order;
       RETURN QUERY SELECT v_order_id, p_order_number, v_subtotal;
       RETURN;
     END IF;
@@ -48,7 +48,7 @@ BEGIN
     END IF;
     
     SELECT id, price, available, name INTO v_menu_item
-    FROM menu_items
+    FROM public.menu_items
     WHERE id = (v_item->>'menu_item_id')::UUID;
     
     IF v_menu_item.id IS NULL THEN
@@ -63,7 +63,7 @@ BEGIN
   END LOOP;
 
   -- Create order
-  INSERT INTO orders (
+  INSERT INTO public.orders (
     order_number, attempt_id, customer_name, customer_phone,
     hostel_room, order_type, subtotal, total, status, notes
   ) VALUES (
@@ -78,10 +78,10 @@ BEGIN
     v_quantity := (v_item->>'quantity')::INTEGER;
     
     SELECT id, price, name INTO v_menu_item
-    FROM menu_items
+    FROM public.menu_items
     WHERE id = (v_item->>'menu_item_id')::UUID;
     
-    INSERT INTO order_items (
+    INSERT INTO public.order_items (
       order_id, menu_item_id, menu_item_name, menu_item_price, quantity
     ) VALUES (
       v_order_id, v_menu_item.id, v_menu_item.name, v_menu_item.price, v_quantity
@@ -90,7 +90,7 @@ BEGIN
 
   RETURN QUERY SELECT v_order_id, p_order_number, v_subtotal;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Grant execute to authenticated and anon (customers can place orders)
 GRANT EXECUTE ON FUNCTION create_order_atomic TO anon, authenticated;
