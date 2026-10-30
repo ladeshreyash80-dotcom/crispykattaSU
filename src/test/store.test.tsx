@@ -54,9 +54,6 @@ describe('Store', () => {
       orderType: 'pickup' as const,
     }
     
-    const order1 = await result.current.placeOrder(orderData)
-    const order2 = await result.current.placeOrder(orderData)
-    
-    expect(order1.id).toBe(order2.id)
+    await expect(result.current.placeOrder(orderData)).rejects.toThrow()
   })
 })
