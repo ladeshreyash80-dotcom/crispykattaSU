@@ -3,25 +3,31 @@ CREATE OR REPLACE FUNCTION validate_order_items()
 RETURNS TRIGGER AS $$
 DECLARE
   menu_item RECORD;
-  calculated_subtotal INTEGER := 0;
-  order_total INTEGER := 0;
 BEGIN
-  -- Fetch the menu item
-  SELECT id, price, available INTO menu_item
+  -- Fetch the menu item (canonical data from DB)
+  SELECT id, price, available, name INTO menu_item
   FROM public.menu_items
   WHERE id = NEW.menu_item_id;
   
-  -- Validate item exists and is available
+  -- Validate item exists
   IF menu_item.id IS NULL THEN
-    RAISE EXCEPTION 'Menu item not found';
+    RAISE EXCEPTION 'Menu item not found: %', NEW.menu_item_id;
   END IF;
   
+  -- Validate item is available
   IF NOT menu_item.available THEN
-    RAISE EXCEPTION 'Menu item is not available';
+    RAISE EXCEPTION 'Menu item is not available: %', menu_item.name;
   END IF;
   
-  -- Store the canonical price from DB, not client-submitted
+  -- Validate quantity is positive (additional to CHECK constraint)
+  IF NEW.quantity <= 0 THEN
+    RAISE EXCEPTION 'Quantity must be greater than zero';
+  END IF;
+  
+  -- Override client-submitted values with canonical DB values
+  -- This prevents price manipulation and fake item names
   NEW.menu_item_price := menu_item.price;
+  NEW.menu_item_name := menu_item.name;
   
   RETURN NEW;
 END;

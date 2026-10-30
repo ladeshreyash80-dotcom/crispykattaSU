@@ -41,15 +41,17 @@ CREATE POLICY "Authenticated users can update order items" ON order_items FOR UP
 DROP POLICY IF EXISTS "Authenticated users can delete order items" ON order_items;
 CREATE POLICY "Authenticated users can delete order items" ON order_items FOR DELETE USING (auth.role() = 'authenticated');
 
--- Loyalty points: only authenticated users can view their own, only trusted server can modify (for now, only authenticated admins)
+-- Loyalty points: SECURITY FIX - users can ONLY view their OWN loyalty points
+-- Removed OR auth.role() = 'authenticated' which allowed any authenticated user to read ALL records
 DROP POLICY IF EXISTS "Users can view own loyalty points" ON loyalty_points;
-CREATE POLICY "Users can view own loyalty points" ON loyalty_points FOR SELECT USING (auth.uid() = user_id OR auth.role() = 'authenticated');
+CREATE POLICY "Users can view own loyalty points" ON loyalty_points FOR SELECT USING (auth.uid() = user_id);
 DROP POLICY IF EXISTS "Authenticated users can manage loyalty points" ON loyalty_points;
 CREATE POLICY "Authenticated users can manage loyalty points" ON loyalty_points FOR ALL USING (auth.role() = 'authenticated');
 
--- Point transactions: authenticated can view/manage
+-- Point transactions: SECURITY FIX - users can ONLY view their OWN transactions
+-- Removed OR auth.role() = 'authenticated' which allowed any authenticated user to read ALL records
 DROP POLICY IF EXISTS "Users can view own point transactions" ON point_transactions;
-CREATE POLICY "Users can view own point transactions" ON point_transactions FOR SELECT USING (auth.uid() = user_id OR auth.role() = 'authenticated');
+CREATE POLICY "Users can view own point transactions" ON point_transactions FOR SELECT USING (auth.uid() = user_id);
 DROP POLICY IF EXISTS "Authenticated users can manage point transactions" ON point_transactions;
 CREATE POLICY "Authenticated users can manage point transactions" ON point_transactions FOR ALL USING (auth.role() = 'authenticated');
 
