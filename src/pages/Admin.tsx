@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { LogIn, LogOut, Upload, Plus, Save, X, Image as ImageIcon, Menu as MenuIcon, Settings, Trash2 } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { LogIn, LogOut, Upload, Plus, Save, X, Image as ImageIcon, Menu as MenuIcon, Settings, Trash2, Eye, AlertCircle } from 'lucide-react'
 import { getSupabaseClient, isSupabaseConfigured } from '../lib/supabase'
 import type { User } from '@supabase/supabase-js'
 
@@ -22,6 +22,9 @@ interface Category {
   slug: string
 }
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+
 export default function Admin() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -35,6 +38,10 @@ export default function Admin() {
   const [stallPhotoUrl, setStallPhotoUrl] = useState('')
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const stallFileInputRef = useRef<HTMLInputElement>(null)
 
   const configured = isSupabaseConfigured()
 
@@ -79,6 +86,7 @@ export default function Admin() {
       }
     } catch (err) {
       console.error(err)
+      setError('Failed to load data')
     }
   }
 
@@ -107,28 +115,93 @@ export default function Admin() {
     } catch {}
   }
 
+  const validateFile = (file: File): string | null => {
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return `Invalid file type. Allowed: JPG, PNG, WebP, GIF`
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      return `File too large. Maximum size: 5MB`
+    }
+    return null
+  }
+
+  const handleFileSelect = (file: File, type: 'stall' | 'menu', itemId?: string) => {
+    const validationError = validateFile(file)
+    if (validationError) {
+      setError(validationError)
+      return
+    }
+    
+    // Create preview
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setImagePreview(e.target?.result as string)
+    }
+    reader.readAsDataURL(file)
+    
+    // Upload
+    handleImageUpload(file, type, itemId)
+  }
+
   const handleImageUpload = async (file: File, type: 'stall' | 'menu', itemId?: string) => {
     const client = getSupabaseClient()
     if (!client) return
     setUploading(true)
     setError(null)
+    setUploadProgress(0)
     try {
       const fileExt = file.name.split('.').pop() || 'jpg'
       const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`
       const bucket = type === 'stall' ? 'stall-photos' : 'menu-images'
+      
+      // Simulate progress (Supabase doesn't support progress events natively)
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => Math.min(prev + 10, 90))
+      }, 100)
+      
       const { error: uploadError } = await client.storage.from(bucket).upload(fileName, file)
+      clearInterval(progressInterval)
+      
       if (uploadError) {
         if (uploadError.message?.includes('Bucket not found')) {
           throw new Error(`Storage bucket "${bucket}" not found. Create it in Supabase Storage with public access enabled.`)
         }
         throw uploadError
       }
+      
+      setUploadProgress(100)
       const { data: { publicUrl } } = client.storage.from(bucket).getPublicUrl(fileName)
+      
       if (type === 'stall') {
         setStallPhotoUrl(publicUrl)
         await client.from('store_settings').upsert({ key: 'stall_photo', value: { url: publicUrl } }, { onConflict: 'key' })
       } else if (type === 'menu' && itemId) {
         await client.from('menu_items').update({ image_url: publicUrl }).eq('id', itemId)
+        await loadData()
+      }
+      
+      setImagePreview(null)
+      setTimeout(() => setUploadProgress(0), 1000)
+    } catch (err: any) {
+      setError(err.message)
+      setImagePreview(null)
+      setUploadProgress(0)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleRemoveImage = async (type: 'stall' | 'menu', itemId?: string) => {
+    const client = getSupabaseClient()
+    if (!client) return
+    setUploading(true)
+    setError(null)
+    try {
+      if (type === 'stall') {
+        await client.from('store_settings').upsert({ key: 'stall_photo', value: { url: null } }, { onConflict: 'key' })
+        setStallPhotoUrl('')
+      } else if (type === 'menu' && itemId) {
+        await client.from('menu_items').update({ image_url: null }).eq('id', itemId)
         await loadData()
       }
     } catch (err: any) {
@@ -152,6 +225,7 @@ export default function Admin() {
         await client.from('menu_items').insert([rest])
       }
       setEditingItem(null)
+      setImagePreview(null)
       await loadData()
     } catch (err: any) {
       setError(err.message)
@@ -227,17 +301,35 @@ export default function Admin() {
           <button onClick={() => setActiveTab('settings')} style={{padding:'8px 16px',background: activeTab==='settings'?'#d97757':'#2a221b',color:'white',border:'none',borderRadius:'4px',cursor:'pointer'}}><Settings size={16} style={{display:'inline',marginRight:'6px'}}/>Settings</button>
         </div>
 
-        {error && <div style={{background:'#7f1d1d',color:'white',padding:'10px',borderRadius:'4px',marginBottom:'16px'}}>{error}</div>}
+        {error && <div style={{background:'#7f1d1d',color:'white',padding:'10px',borderRadius:'4px',marginBottom:'16px',display:'flex',alignItems:'center',gap:'8px'}}><AlertCircle size={16}/> {error}</div>}
 
         {activeTab === 'images' && (
           <div style={{background:'#1a1410',padding:'20px',borderRadius:'8px',border:'1px solid #2a221b'}}>
             <h2 style={{color:'white',marginBottom:'16px'}}>Stall Photo</h2>
             <p style={{color:'#a89f91',marginBottom:'12px',fontSize:'14px'}}>Storage buckets required: 'stall-photos' and 'menu-images' (public). Create them in Supabase Storage if missing.</p>
             {stallPhotoUrl && <img src={stallPhotoUrl} alt="Stall" style={{width:'100%',maxHeight:'300px',objectFit:'cover',borderRadius:'8px',marginBottom:'16px'}} />}
-            <label style={{background:'#d97757',color:'white',padding:'10px 20px',borderRadius:'4px',cursor:'pointer',display:'inline-flex',alignItems:'center',gap:'8px'}}>
-              <Upload size={18}/> {uploading ? 'Uploading...' : 'Upload/Replace Photo'}
-              <input type="file" accept="image/*" style={{display:'none'}} onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'stall')} disabled={uploading} />
-            </label>
+            {imagePreview && (
+              <div style={{marginBottom:'16px'}}>
+                <p style={{color:'#a89f91',fontSize:'12px',marginBottom:'8px'}}>Preview:</p>
+                <img src={imagePreview} alt="Preview" style={{width:'100%',maxHeight:'200px',objectFit:'cover',borderRadius:'8px'}} />
+              </div>
+            )}
+            {uploadProgress > 0 && (
+              <div style={{width:'100%',height:'4px',background:'#2a221b',borderRadius:'2px',marginBottom:'12px'}}>
+                <div style={{width:`${uploadProgress}%`,height:'100%',background:'#d97757',borderRadius:'2px',transition:'width 0.3s'}}></div>
+              </div>
+            )}
+            <div style={{display:'flex',gap:'8px',flexWrap:'wrap'}}>
+              <label style={{background:'#d97757',color:'white',padding:'10px 20px',borderRadius:'4px',cursor:'pointer',display:'inline-flex',alignItems:'center',gap:'8px'}}>
+                <Upload size={18}/> {uploading ? 'Uploading...' : 'Upload/Replace Photo'}
+                <input type="file" accept="image/*" style={{display:'none'}} onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0], 'stall')} disabled={uploading} ref={stallFileInputRef} />
+              </label>
+              {stallPhotoUrl && (
+                <button onClick={() => handleRemoveImage('stall')} disabled={uploading} style={{background:'#7f1d1d',color:'white',padding:'10px 20px',borderRadius:'4px',border:'none',cursor:'pointer',display:'inline-flex',alignItems:'center',gap:'8px'}}>
+                  <Trash2 size={18}/> Remove
+                </button>
+              )}
+            </div>
           </div>
         )}
 
@@ -245,12 +337,12 @@ export default function Admin() {
           <div>
             <div style={{display:'flex',justifyContent:'space-between',marginBottom:'16px'}}>
               <h2 style={{color:'white'}}>Menu Items</h2>
-              <button onClick={() => setEditingItem({ name: '', price: 0, available: true, veg: true, description: '' })} style={{background:'#d97757',color:'white',border:'none',padding:'8px 16px',borderRadius:'4px',cursor:'pointer'}}><Plus size={16} style={{display:'inline',marginRight:'6px'}}/>Add Item</button>
+              <button onClick={() => setEditingItem({ name: '', price: 0, available: true, veg: true, description: '', image_url: null })} style={{background:'#d97757',color:'white',border:'none',padding:'8px 16px',borderRadius:'4px',cursor:'pointer'}}><Plus size={16} style={{display:'inline',marginRight:'6px'}}/>Add Item</button>
             </div>
             <div style={{display:'flex',flexDirection:'column',gap:'10px'}}>
               {menuItems.map((item) => (
-                <div key={item.id} style={{background:'#1a1410',padding:'16px',borderRadius:'8px',border:'1px solid #2a221b',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                  <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
+                <div key={item.id} style={{background:'#1a1410',padding:'16px',borderRadius:'8px',border:'1px solid #2a221b',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:'8px'}}>
+                  <div style={{display:'flex',alignItems:'center',gap:'12px',flex:1,minWidth:'200px'}}>
                     {item.image_url && <img src={item.image_url} alt={item.name} style={{width:'60px',height:'60px',objectFit:'cover',borderRadius:'4px'}} />}
                     <div>
                       <div style={{color:'white',fontWeight:'600'}}>{item.name}</div>
@@ -269,16 +361,45 @@ export default function Admin() {
 
         {editingItem && (
           <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.7)',display:'flex',alignItems:'center',justifyContent:'center',padding:'20px',zIndex:50}}>
-            <div style={{background:'#1a1410',padding:'24px',borderRadius:'8px',maxWidth:'400px',width:'100%',border:'1px solid #2a221b'}}>
+            <div style={{background:'#1a1410',padding:'24px',borderRadius:'8px',maxWidth:'400px',width:'100%',border:'1px solid #2a221b',maxHeight:'90vh',overflowY:'auto'}}>
               <div style={{display:'flex',justifyContent:'space-between',marginBottom:'16px'}}>
-                <h3 style={{color:'white'}}>Edit Item</h3>
-                <button onClick={() => setEditingItem(null)} style={{background:'none',border:'none',color:'#a89f91',cursor:'pointer'}}><X size={20}/></button>
+                <h3 style={{color:'white'}}>{editingItem.id ? 'Edit' : 'Add'} Item</h3>
+                <button onClick={() => { setEditingItem(null); setImagePreview(null) }} style={{background:'none',border:'none',color:'#a89f91',cursor:'pointer'}}><X size={20}/></button>
               </div>
               <div style={{display:'flex',flexDirection:'column',gap:'12px'}}>
                 <input value={editingItem.name || ''} onChange={(e) => setEditingItem({...editingItem, name: e.target.value})} placeholder="Name" style={{padding:'8px',background:'#2a221b',color:'white',border:'1px solid #3a322b',borderRadius:'4px'}} />
                 <input type="number" value={editingItem.price !== undefined ? editingItem.price/100 : 0} onChange={(e) => setEditingItem({...editingItem, price: Math.round(parseFloat(e.target.value||'0')*100)})} placeholder="Price" style={{padding:'8px',background:'#2a221b',color:'white',border:'1px solid #3a322b',borderRadius:'4px'}} />
                 <textarea value={editingItem.description || ''} onChange={(e) => setEditingItem({...editingItem, description: e.target.value})} placeholder="Description" style={{padding:'8px',background:'#2a221b',color:'white',border:'1px solid #3a322b',borderRadius:'4px'}} />
                 <label style={{color:'white',display:'flex',alignItems:'center',gap:'8px'}}><input type="checkbox" checked={editingItem.available !== false} onChange={(e) => setEditingItem({...editingItem, available: e.target.checked})} /> Available</label>
+                <label style={{color:'white',display:'flex',alignItems:'center',gap:'8px'}}><input type="checkbox" checked={editingItem.veg !== false} onChange={(e) => setEditingItem({...editingItem, veg: e.target.checked})} /> Vegetarian</label>
+                
+                {/* Image upload section */}
+                <div style={{border:'1px solid #3a322b',borderRadius:'4px',padding:'12px'}}>
+                  <p style={{color:'#a89f91',fontSize:'12px',marginBottom:'8px'}}>Product Image</p>
+                  {editingItem.image_url && (
+                    <img src={editingItem.image_url} alt="Current" style={{width:'100%',maxHeight:'150px',objectFit:'cover',borderRadius:'4px',marginBottom:'8px'}} />
+                  )}
+                  {imagePreview && (
+                    <img src={imagePreview} alt="Preview" style={{width:'100%',maxHeight:'150px',objectFit:'cover',borderRadius:'4px',marginBottom:'8px'}} />
+                  )}
+                  {uploadProgress > 0 && (
+                    <div style={{width:'100%',height:'4px',background:'#2a221b',borderRadius:'2px',marginBottom:'8px'}}>
+                      <div style={{width:`${uploadProgress}%`,height:'100%',background:'#d97757',borderRadius:'2px',transition:'width 0.3s'}}></div>
+                    </div>
+                  )}
+                  <div style={{display:'flex',gap:'8px'}}>
+                    <label style={{background:'#d97757',color:'white',padding:'6px 12px',borderRadius:'4px',cursor:'pointer',display:'inline-flex',alignItems:'center',gap:'6px',fontSize:'14px'}}>
+                      <Upload size={14}/> {uploading ? 'Uploading...' : 'Upload/Replace'}
+                      <input type="file" accept="image/*" style={{display:'none'}} onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0], 'menu', editingItem.id)} disabled={uploading} />
+                    </label>
+                    {editingItem.image_url && (
+                      <button onClick={() => { handleRemoveImage('menu', editingItem.id); setEditingItem({...editingItem, image_url: null}) }} disabled={uploading} style={{background:'#7f1d1d',color:'white',padding:'6px 12px',borderRadius:'4px',border:'none',cursor:'pointer',display:'inline-flex',alignItems:'center',gap:'6px',fontSize:'14px'}}>
+                        <Trash2 size={14}/> Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+                
                 <button onClick={handleSaveItem} disabled={saving} style={{padding:'8px',background:'#d97757',color:'white',border:'none',borderRadius:'4px'}}>{saving ? 'Saving...' : 'Save'}</button>
               </div>
             </div>
